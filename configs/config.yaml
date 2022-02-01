@@ -1,0 +1,16 @@
+server:
+  port: 8082
+  read_timeout: 30s
+  write_timeout: 30s
+
+database:
+  host: localhost
+  port: 5432
+  user: acme
+  password: acme
+  name: acme_orders
+  sslmode: disable
+
+payment_service:
+  url: http://localhost:8083
+  timeout: 30s
