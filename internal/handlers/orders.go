@@ -38,6 +38,7 @@ func (h *Handlers) CreateOrder(c *gin.Context) {
 	c.JSON(http.StatusCreated, order)
 }
 
+// API-105: Initial orders v1 API (2022-04)
 // CreateOrderV1 handles POST /api/v1/orders
 // Deprecated: Use CreateOrder (v2) instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
