@@ -10,18 +10,20 @@ import (
 )
 
 type Server struct {
-	config        *config.Config
-	router        *gin.Engine
-	orderHandlers *handlers.OrderHandlers
+	config          *config.Config
+	router          *gin.Engine
+	orderHandlers   *handlers.OrderHandlers
+	orderHandlersV2 *handlers.OrderHandlersV2
 }
 
-func NewServer(cfg *config.Config, orderHandlers *handlers.OrderHandlers) *Server {
+func NewServer(cfg *config.Config, orderHandlers *handlers.OrderHandlers, orderHandlersV2 *handlers.OrderHandlersV2) *Server {
 	router := gin.Default()
 
 	s := &Server{
-		config:        cfg,
-		router:        router,
-		orderHandlers: orderHandlers,
+		config:          cfg,
+		router:          router,
+		orderHandlers:   orderHandlers,
+		orderHandlersV2: orderHandlersV2,
 	}
 
 	s.setupRoutes()
@@ -39,6 +41,14 @@ func (s *Server) setupRoutes() {
 		v1.GET("/orders/:id", s.orderHandlers.GetOrderV1)
 		v1.GET("/orders", s.orderHandlers.ListOrdersV1)
 		v1.POST("/orders/:id/status", s.orderHandlers.UpdateOrderStatusV1)
+	}
+
+	v2 := s.router.Group("/api/v2")
+	{
+		v2.POST("/orders", s.orderHandlersV2.CreateOrder)
+		v2.GET("/orders/:id", s.orderHandlersV2.GetOrder)
+		v2.GET("/orders", s.orderHandlersV2.ListOrders)
+		v2.PATCH("/orders/:id/status", s.orderHandlersV2.UpdateOrderStatus)
 	}
 }
 

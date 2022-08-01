@@ -9,7 +9,20 @@ import (
 type Config struct {
 	Server         ServerConfig
 	Database       DatabaseConfig
+	Redis          RedisConfig
 	PaymentService ServiceConfig
+	Features       FeatureFlags
+}
+
+type RedisConfig struct {
+	Host     string
+	Port     int
+	Password string
+	DB       int
+}
+
+type FeatureFlags struct {
+	EnableLegacyPayments bool
 }
 
 type ServerConfig struct {
@@ -56,11 +69,29 @@ func Load() *Config {
 			Name:     getEnvString("DB_NAME", "acme_orders"),
 			SSLMode:  getEnvString("DB_SSLMODE", "disable"),
 		},
+		Redis: RedisConfig{
+			Host:     getEnvString("REDIS_HOST", "localhost"),
+			Port:     getEnvInt("REDIS_PORT", 6379),
+			Password: getEnvString("REDIS_PASSWORD", ""),
+			DB:       getEnvInt("REDIS_DB", 0),
+		},
 		PaymentService: ServiceConfig{
 			BaseURL: getEnvString("PAYMENT_SERVICE_URL", "http://localhost:8083"),
 			Timeout: time.Duration(getEnvInt("PAYMENT_SERVICE_TIMEOUT", 30)) * time.Second,
 		},
+		Features: FeatureFlags{
+			EnableLegacyPayments: getEnvBool("ENABLE_LEGACY_PAYMENTS", true),
+		},
 	}
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
+		}
+	}
+	return defaultValue
 }
 
 func getEnvString(key, defaultValue string) string {
