@@ -216,6 +216,7 @@ func (c *HTTPPaymentClient) ValidateWebhook(ctx context.Context, payload []byte,
 	return true, nil
 }
 
+// PLAT-025: Request ID propagation to payment service (2022-11)
 func (c *HTTPPaymentClient) setHeaders(ctx context.Context, req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
