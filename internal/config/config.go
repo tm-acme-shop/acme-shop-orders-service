@@ -22,6 +22,7 @@ type RedisConfig struct {
 }
 
 type FeatureFlags struct {
+	EnableV1API          bool
 	EnableLegacyPayments bool
 }
 
@@ -80,7 +81,8 @@ func Load() *Config {
 			Timeout: time.Duration(getEnvInt("PAYMENT_SERVICE_TIMEOUT", 30)) * time.Second,
 		},
 		Features: FeatureFlags{
-			EnableLegacyPayments: getEnvBool("ENABLE_LEGACY_PAYMENTS", true),
+			EnableV1API:          getEnvBool("ENABLE_V1_API", true),
+			EnableLegacyPayments: getEnvBool("ENABLE_LEGACY_PAYMENTS", false),
 		},
 	}
 }

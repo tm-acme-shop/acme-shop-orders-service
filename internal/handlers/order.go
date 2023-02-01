@@ -26,7 +26,11 @@ type CreateOrderV1Request struct {
 	Currency string             `json:"currency"`
 }
 
+// CreateOrderV1 creates an order using the legacy v1 API.
+// Deprecated: Use OrderHandlersV2.CreateOrder instead.
+// TODO(TEAM-ORDERS): Migrate all v1 order endpoints to v2.
 func (h *OrderHandlers) CreateOrderV1(c *gin.Context) {
+	log.Printf("Warning: v1 order endpoint called")
 	log.Printf("Creating order via v1 API")
 
 	var req CreateOrderV1Request
@@ -47,7 +51,11 @@ func (h *OrderHandlers) CreateOrderV1(c *gin.Context) {
 	c.JSON(http.StatusCreated, order)
 }
 
+// GetOrderV1 retrieves an order using the legacy v1 API.
+// Deprecated: Use OrderHandlersV2.GetOrder instead.
+// TODO(TEAM-ORDERS): Migrate all v1 order endpoints to v2.
 func (h *OrderHandlers) GetOrderV1(c *gin.Context) {
+	log.Printf("Warning: v1 order endpoint called")
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseInt(orderIDStr, 10, 64)
 	if err != nil {
@@ -72,7 +80,11 @@ func (h *OrderHandlers) GetOrderV1(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
+// ListOrdersV1 lists orders using the legacy v1 API.
+// Deprecated: Use OrderHandlersV2.ListOrders instead.
+// TODO(TEAM-ORDERS): Migrate all v1 order endpoints to v2.
 func (h *OrderHandlers) ListOrdersV1(c *gin.Context) {
+	log.Printf("Warning: v1 order endpoint called")
 	userIDStr := c.Query("user_id")
 	if userIDStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
@@ -100,7 +112,11 @@ func (h *OrderHandlers) ListOrdersV1(c *gin.Context) {
 	})
 }
 
+// UpdateOrderStatusV1 updates order status using the legacy v1 API.
+// Deprecated: Use OrderHandlersV2.UpdateOrderStatus instead.
+// TODO(TEAM-ORDERS): Migrate all v1 order endpoints to v2.
 func (h *OrderHandlers) UpdateOrderStatusV1(c *gin.Context) {
+	log.Printf("Warning: v1 order endpoint called")
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseInt(orderIDStr, 10, 64)
 	if err != nil {

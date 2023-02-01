@@ -11,8 +11,12 @@ import (
 )
 
 type PaymentClientV2 struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL        string
+	httpClient     *http.Client
+	circuitOpen    bool
+	failureCount   int
+	lastFailure    time.Time
+	circuitTimeout time.Duration
 }
 
 func NewPaymentClientV2(baseURL string) *PaymentClientV2 {
@@ -21,7 +25,37 @@ func NewPaymentClientV2(baseURL string) *PaymentClientV2 {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		circuitOpen:    false,
+		failureCount:   0,
+		circuitTimeout: 30 * time.Second,
 	}
+}
+
+func (c *PaymentClientV2) isCircuitOpen() bool {
+	if !c.circuitOpen {
+		return false
+	}
+	if time.Since(c.lastFailure) > c.circuitTimeout {
+		log.Printf("Circuit breaker: half-open state, allowing request")
+		c.circuitOpen = false
+		c.failureCount = 0
+		return false
+	}
+	return true
+}
+
+func (c *PaymentClientV2) recordFailure() {
+	c.failureCount++
+	c.lastFailure = time.Now()
+	if c.failureCount >= 3 {
+		log.Printf("Circuit breaker: opening circuit after %d failures", c.failureCount)
+		c.circuitOpen = true
+	}
+}
+
+func (c *PaymentClientV2) recordSuccess() {
+	c.failureCount = 0
+	c.circuitOpen = false
 }
 
 type ChargeRequestV2 struct {
@@ -37,6 +71,11 @@ type ChargeResponseV2 struct {
 }
 
 func (c *PaymentClientV2) Charge(ctx context.Context, orderID string, amount float64, currency string, requestID string) (*ChargeResponseV2, error) {
+	if c.isCircuitOpen() {
+		log.Printf("Circuit breaker: rejecting request, circuit is open")
+		return nil, fmt.Errorf("circuit breaker open, payment service unavailable")
+	}
+
 	log.Printf("Calling v2 payment API for order %s, amount %.2f %s, requestID: %s", orderID, amount, currency, requestID)
 
 	req := ChargeRequestV2{
@@ -46,7 +85,13 @@ func (c *PaymentClientV2) Charge(ctx context.Context, orderID string, amount flo
 		RequestID: requestID,
 	}
 
-	return c.chargeWithRetry(ctx, req, requestID, 3)
+	resp, err := c.chargeWithRetry(ctx, req, requestID, 3)
+	if err != nil {
+		c.recordFailure()
+		return nil, err
+	}
+	c.recordSuccess()
+	return resp, nil
 }
 
 func (c *PaymentClientV2) chargeWithRetry(ctx context.Context, req ChargeRequestV2, requestID string, maxRetries int) (*ChargeResponseV2, error) {

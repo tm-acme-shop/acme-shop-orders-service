@@ -8,12 +8,18 @@ import (
 	"net/http"
 )
 
+// PaymentClientV1 is the legacy payment client.
+// Deprecated: Use PaymentClientV2 instead.
+// TODO(TEAM-ORDERS): Remove legacy v1 payment client after migration.
 type PaymentClientV1 struct {
 	baseURL    string
 	httpClient *http.Client
 }
 
+// NewPaymentClientV1 creates a new legacy payment client.
+// Deprecated: Use NewPaymentClientV2 instead.
 func NewPaymentClientV1(baseURL string) *PaymentClientV1 {
+	log.Printf("Warning: Creating legacy v1 payment client")
 	return &PaymentClientV1{
 		baseURL:    baseURL,
 		httpClient: &http.Client{},
@@ -31,7 +37,10 @@ type ChargeResponse struct {
 	Status        string `json:"status"`
 }
 
+// Charge processes a payment using the legacy v1 API.
+// Deprecated: Use PaymentClientV2.Charge instead.
 func (c *PaymentClientV1) Charge(orderID string, amount float64, currency string) (*ChargeResponse, error) {
+	log.Printf("Warning: Using deprecated v1 payment API for order %s", orderID)
 	log.Printf("Calling v1 payment API for order %s, amount %.2f %s", orderID, amount, currency)
 
 	req := ChargeRequest{
