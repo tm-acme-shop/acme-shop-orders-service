@@ -13,6 +13,7 @@ import (
 	"github.com/tm-acme-shop/acme-shop-shared-go/models"
 )
 
+// API-155: v2 order endpoints with structured responses (2023-05)
 // CreateOrder handles POST /api/v2/orders
 func (h *Handlers) CreateOrder(c *gin.Context) {
 	var req models.CreateOrderRequest
