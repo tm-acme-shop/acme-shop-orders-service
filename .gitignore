@@ -6,11 +6,12 @@ bin/
 *.so
 *.dylib
 
-# Test binary
+# Test binary, built with `go test -c`
 *.test
 
 # Output of the go coverage tool
 *.out
+coverage.html
 
 # Dependency directories
 vendor/
@@ -20,10 +21,36 @@ vendor/
 .vscode/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Environment
 .env
 .env.local
+.env.*.local
+*.env
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Local config overrides
+configs/config.local.yaml
+
+# Debug files
+debug
+*.prof
+
+# Air live reload
+tmp/

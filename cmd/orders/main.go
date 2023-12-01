@@ -1,52 +1,135 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	_ "github.com/lib/pq"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/clients"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/config"
+	"github.com/tm-acme-shop/acme-shop-orders-service/internal/events"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/handlers"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/repository"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/server"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/service"
+	"github.com/tm-acme-shop/acme-shop-shared-go/logging"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	log.Printf("Starting Orders Service")
-
 	cfg := config.Load()
 
-	db, err := sql.Open("postgres", cfg.Database.ConnectionString())
+	logger := logging.NewLoggerV2("orders-service")
+
+	// TODO(TEAM-PLATFORM): Migrate all legacy logging to structured logging
+	logging.Infof("Starting orders-service on port %d", cfg.Server.Port)
+
+	db, err := initDatabase(cfg)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Fatal("Failed to connect to database", logging.Fields{"error": err.Error()})
 	}
 	defer db.Close()
 
+	orderRepo := repository.NewPostgresOrderRepository(db, logger)
+	orderCache := repository.NewRedisOrderCache(cfg.Redis)
+
+	// TODO(TEAM-API): Remove legacy repository after migration complete
+	legacyRepo := repository.NewPostgresOrderRepositoryV1(db)
+
+	paymentClient := clients.NewHTTPPaymentClient(cfg.PaymentService, logger)
+	// TODO(TEAM-PAYMENTS): Remove legacy payment client after migration
+	legacyPaymentClient := clients.NewLegacyHTTPPaymentClient(cfg.PaymentService)
+
+	userClient := clients.NewHTTPUserClient(cfg.UserService, logger)
+	notificationClient := clients.NewHTTPNotificationClient(cfg.NotificationService, logger)
+
+	eventPublisher := events.NewKafkaPublisher(cfg.Kafka, logger)
+	defer eventPublisher.Close()
+
+	orderService := service.NewOrderService(
+		orderRepo,
+		orderCache,
+		legacyRepo,
+		paymentClient,
+		legacyPaymentClient,
+		userClient,
+		notificationClient,
+		eventPublisher,
+		cfg,
+	)
+
+	paymentService := service.NewPaymentService(
+		paymentClient,
+		legacyPaymentClient,
+		orderRepo,
+		cfg,
+	)
+
+	h := handlers.NewHandlers(orderService, paymentService, cfg)
+
+	srv := server.New(h, cfg)
+
+	go func() {
+		logger.Info("Server starting", logging.Fields{
+			"port":                  cfg.Server.Port,
+			"enable_legacy_payments": cfg.Features.EnableLegacyPayments,
+			"enable_v1_api":         cfg.Features.EnableV1API,
+		})
+		if err := srv.Start(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("Server failed to start", logging.Fields{"error": err.Error()})
+		}
+	}()
+
+	// Start event consumer
+	eventConsumer := events.NewKafkaConsumer(cfg.Kafka, orderService, logger)
+	go func() {
+		if err := eventConsumer.Start(context.Background()); err != nil {
+			logger.Error("Event consumer failed", logging.Fields{"error": err.Error()})
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logger.Info("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	eventConsumer.Stop()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Error("Server forced to shutdown", logging.Fields{"error": err.Error()})
+	}
+
+	logger.Info("Server exited")
+}
+
+func initDatabase(cfg *config.Config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.Database.ConnectionString())
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	db.SetConnMaxLifetime(cfg.Database.MaxLifetime)
+
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+		return nil, err
 	}
-	log.Printf("Connected to database")
 
-	// V1 clients and services
-	orderRepo := repository.NewOrderRepository(db)
-	paymentClientV1 := clients.NewPaymentClientV1(cfg.PaymentService.BaseURL)
-	orderService := service.NewOrderService(orderRepo, paymentClientV1)
-	orderHandlers := handlers.NewOrderHandlers(orderService)
+	// TODO(TEAM-PLATFORM): Run migrations automatically in development
+	logging.Info("Database connected", logging.Fields{
+		"host": cfg.Database.Host,
+		"name": cfg.Database.Name,
+	})
 
-	// V2 clients and services
-	orderRepoV2 := repository.NewOrderRepositoryV2(db)
-	paymentClientV2 := clients.NewPaymentClientV2(cfg.PaymentService.BaseURL)
-	paymentClient := clients.NewPaymentClient(paymentClientV1, paymentClientV2, cfg.Features.EnableLegacyPayments)
-	orderServiceV2 := service.NewOrderServiceV2(orderRepoV2, paymentClient, cfg)
-	orderHandlersV2 := handlers.NewOrderHandlersV2(orderServiceV2)
-
-	srv := server.NewServer(cfg, orderHandlers, orderHandlersV2)
-
-	log.Printf("Feature flags: EnableLegacyPayments=%v", cfg.Features.EnableLegacyPayments)
-
-	if err := srv.Run(); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	return db, nil
 }

@@ -1,5 +1,5 @@
 # Orders Service Configuration
-# Environment: Development
+# Environment: Production
 
 server:
   port: 8082
@@ -8,44 +8,42 @@ server:
   idle_timeout: 60s
 
 database:
-  host: localhost
+  host: ${DB_HOST}
   port: 5432
-  user: acme
-  password: acme
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
   name: acme_orders
-  sslmode: disable
-  max_open_conns: 25
-  max_idle_conns: 5
+  sslmode: require
+  max_open_conns: 100
+  max_idle_conns: 25
   max_lifetime: 5m
 
 redis:
-  host: localhost
+  host: ${REDIS_HOST}
   port: 6379
-  password: ""
+  password: ${REDIS_PASSWORD}
   db: 0
   ttl: 5m
 
 kafka:
-  brokers:
-    - localhost:9092
-  consumer_group: orders-service
-  orders_topic: orders
-  payments_topic: payments
+  brokers: ${KAFKA_BROKERS}
+  consumer_group: orders-service-prod
+  orders_topic: orders-prod
+  payments_topic: payments-prod
 
 services:
   payment:
-    base_url: http://localhost:8083
+    base_url: ${PAYMENT_SERVICE_URL}
     timeout: 30s
-    # TODO(TEAM-SEC): Use secret management for API keys
-    api_key: ""
+    api_key: ${PAYMENT_SERVICE_API_KEY}
   user:
-    base_url: http://localhost:8081
+    base_url: ${USER_SERVICE_URL}
     timeout: 10s
-    api_key: ""
+    api_key: ${USER_SERVICE_API_KEY}
   notification:
-    base_url: http://localhost:8084
+    base_url: ${NOTIFICATION_SERVICE_URL}
     timeout: 10s
-    api_key: ""
+    api_key: ${NOTIFICATION_SERVICE_API_KEY}
 
 # Feature flags
 # TODO(TEAM-PLATFORM): Move to feature flag service
@@ -56,7 +54,7 @@ features:
   
   # Enable legacy payment processing path
   # TODO(TEAM-PAYMENTS): Set to false after migration complete
-  enable_legacy_payments: true
+  enable_legacy_payments: false
   
   # Enable order event publishing
   enable_order_events: true
@@ -65,5 +63,5 @@ features:
   enable_order_caching: true
 
 logging:
-  level: debug
+  level: info
   format: json
