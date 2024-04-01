@@ -17,6 +17,7 @@ import (
 // Ensure LegacyHTTPPaymentClient implements interfaces.LegacyPaymentClient
 var _ interfaces.LegacyPaymentClient = (*LegacyHTTPPaymentClient)(nil)
 
+// PLAT-065: DEPRECATED - Legacy payment client replaced with v2 (2024-04)
 // LegacyHTTPPaymentClient is the deprecated payment client.
 // Deprecated: Use HTTPPaymentClient instead.
 // TODO(TEAM-PAYMENTS): Remove after migration complete
