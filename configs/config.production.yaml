@@ -1,0 +1,67 @@
+# Orders Service Configuration
+# Environment: Production
+
+server:
+  port: 8082
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 60s
+
+database:
+  host: ${DB_HOST}
+  port: 5432
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  name: acme_orders
+  sslmode: require
+  max_open_conns: 100
+  max_idle_conns: 25
+  max_lifetime: 5m
+
+redis:
+  host: ${REDIS_HOST}
+  port: 6379
+  password: ${REDIS_PASSWORD}
+  db: 0
+  ttl: 5m
+
+kafka:
+  brokers: ${KAFKA_BROKERS}
+  consumer_group: orders-service-prod
+  orders_topic: orders-prod
+  payments_topic: payments-prod
+
+services:
+  payment:
+    base_url: ${PAYMENT_SERVICE_URL}
+    timeout: 30s
+    api_key: ${PAYMENT_SERVICE_API_KEY}
+  user:
+    base_url: ${USER_SERVICE_URL}
+    timeout: 10s
+    api_key: ${USER_SERVICE_API_KEY}
+  notification:
+    base_url: ${NOTIFICATION_SERVICE_URL}
+    timeout: 10s
+    api_key: ${NOTIFICATION_SERVICE_API_KEY}
+
+# Feature flags
+# TODO(TEAM-PLATFORM): Move to feature flag service
+features:
+  # Enable deprecated v1 API endpoints
+  # TODO(TEAM-API): Set to false after migration complete
+  enable_v1_api: true
+  
+  # Enable legacy payment processing path
+  # TODO(TEAM-PAYMENTS): Set to false after migration complete
+  enable_legacy_payments: false
+  
+  # Enable order event publishing
+  enable_order_events: true
+  
+  # Enable Redis caching for orders
+  enable_order_caching: true
+
+logging:
+  level: info
+  format: json

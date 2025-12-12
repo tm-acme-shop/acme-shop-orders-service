@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  orders-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=acme
+      - DB_PASSWORD=acme
+      - DB_NAME=acme_orders
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BROKERS=kafka:9092
+      - PAYMENT_SERVICE_URL=http://payments-service:8083
+      - USER_SERVICE_URL=http://users-service:8081
+      - NOTIFICATION_SERVICE_URL=http://notifications-service:8084
+      # TODO(TEAM-API): Disable v1 API after migration
+      - ENABLE_V1_API=true
+      # TODO(TEAM-PAYMENTS): Disable legacy payments after migration
+      - ENABLE_LEGACY_PAYMENTS=true
+      - ENABLE_ORDER_EVENTS=true
+      - ENABLE_ORDER_CACHING=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - acme-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=acme
+      - POSTGRES_PASSWORD=acme
+      - POSTGRES_DB=acme_orders
+    ports:
+      - "5434:5432"
+    volumes:
+      - orders_postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - acme-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acme -d acme_orders"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - orders_redis_data:/data
+    networks:
+      - acme-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    ports:
+      - "9094:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - acme-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+    ports:
+      - "2183:2181"
+    networks:
+      - acme-network
+
+volumes:
+  orders_postgres_data:
+  orders_redis_data:
+
+networks:
+  acme-network:
+    driver: bridge
