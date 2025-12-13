@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -186,7 +187,7 @@ type LegacyEventConsumer struct {
 // Deprecated: Use NewKafkaConsumer instead.
 func NewLegacyEventConsumer(orderService *service.OrderService) *LegacyEventConsumer {
 	// TODO(TEAM-PLATFORM): Migrate to Kafka
-	logging.Infof("Warning: Using legacy event consumer")
+	log.Printf("Warning: Using legacy event consumer - migrate to Kafka")
 	return &LegacyEventConsumer{
 		orderService: orderService,
 		logger:       logging.NewLoggerV2("legacy-consumer"),
@@ -196,7 +197,7 @@ func NewLegacyEventConsumer(orderService *service.OrderService) *LegacyEventCons
 // Start is a deprecated method.
 // Deprecated: Use KafkaConsumer.Start instead.
 func (c *LegacyEventConsumer) Start(ctx context.Context) error {
-	logging.Infof("Legacy: Starting event consumer (no-op)")
+	log.Printf("Legacy: Starting event consumer (no-op) - migrate to Kafka")
 	<-ctx.Done()
 	return ctx.Err()
 }
@@ -205,7 +206,7 @@ func (c *LegacyEventConsumer) Start(ctx context.Context) error {
 // Deprecated: Use KafkaConsumer.handleMessage instead.
 // TODO(TEAM-PLATFORM): Remove after migration
 func (c *LegacyEventConsumer) HandlePaymentEventLegacy(orderID string, status string) error {
-	logging.Infof("Legacy: Handling payment event for order: %s, status: %s", orderID, status)
+	log.Printf("Legacy: Handling payment event for order: %s, status: %s", orderID, status)
 
 	var orderStatus models.OrderStatus
 	switch status {
