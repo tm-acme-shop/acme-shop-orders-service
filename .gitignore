@@ -54,3 +54,10 @@ debug
 
 # Air live reload
 tmp/
+
+# Sourcegraph / SCIP generated index
+*.scip
+index.scip
+
+# Node
+node_modules/
