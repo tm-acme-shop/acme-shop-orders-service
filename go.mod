@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/segmentio/kafka-go v0.4.46
-	github.com/tm-acme-shop/acme-shop-shared-go v0.0.0
+	github.com/tm-acme-shop/acme-shop-shared-go v0.1.0
 )
 
 require (
