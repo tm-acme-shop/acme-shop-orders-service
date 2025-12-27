@@ -15,7 +15,7 @@ import (
 // UserClient provides operations for fetching user data.
 type UserClient interface {
 	GetUser(ctx context.Context, userID string) (*models.User, error)
-	GetUserV1(ctx context.Context, userID int64) (*models.UserV1, error) // Deprecated
+	// REMOVED: GetUserV1 - use GetUser instead // Deprecated
 }
 
 // HTTPUserClient implements UserClient using HTTP.
@@ -84,7 +84,7 @@ func (c *HTTPUserClient) GetUser(ctx context.Context, userID string) (*models.Us
 // GetUserV1 retrieves a user using the deprecated v1 API.
 // Deprecated: Use GetUser instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
-func (c *HTTPUserClient) GetUserV1(ctx context.Context, userID int64) (*models.UserV1, error) {
+func (c *HTTPUserClient) // REMOVED: GetUserV1 - use GetUser instead {
 	// TODO(TEAM-API): Migrate callers to GetUser
 	logging.Infof("Legacy: Fetching user v1: %d", userID)
 
@@ -187,7 +187,7 @@ func (m *MockUserClient) GetUser(ctx context.Context, userID string) (*models.Us
 	return nil, nil
 }
 
-func (m *MockUserClient) GetUserV1(ctx context.Context, userID int64) (*models.UserV1, error) {
+func (m *MockUserClient) // REMOVED: GetUserV1 - use GetUser instead {
 	return nil, nil
 }
 
