@@ -61,6 +61,9 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		"item_count": len(req.Items),
 	})
 
+	// Calculate order totals using configured tax rate
+	orderTotal := CalculateOrderTotal(req.Subtotal, s.config.TaxRate)
+
 	// Validate user exists
 	valid, err := s.userClient.ValidateUser(ctx, req.UserID)
 	if err != nil {
