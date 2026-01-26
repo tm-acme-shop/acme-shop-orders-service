@@ -384,8 +384,8 @@ func handleError(c *gin.Context, err error) {
 
 	if validationErr, ok := err.(*errors.ValidationError); ok {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": validationErr.Message,
-			"field": validationErr.Field,
+			"error":   validationErr.Message,
+			"details": validationErr.Details,
 		})
 		return
 	}

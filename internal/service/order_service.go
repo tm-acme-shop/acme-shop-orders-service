@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/clients"
 	"github.com/tm-acme-shop/acme-shop-orders-service/internal/config"
@@ -61,8 +60,14 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		"item_count": len(req.Items),
 	})
 
+	// Calculate subtotal from order items
+	var subtotal float64
+	for _, item := range req.Items {
+		subtotal += item.Total.ToFloat()
+	}
+
 	// Calculate order totals using configured tax rate
-	orderTotal := CalculateOrderTotal(req.Subtotal, s.config.TaxRate)
+	_ = CalculateOrderTotal(subtotal, s.config.TaxRate)
 
 	// Validate user exists
 	valid, err := s.userClient.ValidateUser(ctx, req.UserID)
@@ -499,20 +504,19 @@ func (s *OrderService) HandlePaymentWebhook(ctx context.Context, payload []byte,
 
 func (s *OrderService) sendOrderConfirmationNotification(ctx context.Context, order *models.Order) {
 	// TODO(TEAM-NOTIFICATIONS): Use template-based notifications
-	notification := &models.Notification{
-		UserID:  order.UserID,
-		Type:    models.NotificationTypeOrderConfirmation,
-		Channel: models.NotificationChannelEmail,
-		Title:   "Order Confirmation",
-		Body:    fmt.Sprintf("Your order %s has been received.", order.ID),
-		Data: map[string]string{
+	req := &models.SendNotificationRequest{
+		Type:      models.NotificationTypeOrderConfirmation,
+		Priority:  models.NotificationPriorityNormal,
+		Recipient: order.UserID,
+		Subject:   "Order Confirmation",
+		Body:      fmt.Sprintf("Your order %s has been received.", order.ID),
+		Metadata: map[string]string{
 			"order_id": order.ID,
 			"total":    fmt.Sprintf("%.2f %s", order.Total.ToFloat(), order.Total.Currency),
 		},
-		CreatedAt: time.Now(),
 	}
 
-	if err := s.notificationClient.SendNotification(ctx, notification); err != nil {
+	if _, err := s.notificationClient.Send(ctx, req); err != nil {
 		s.logger.Error("Failed to send order confirmation", logging.Fields{
 			"order_id": order.ID,
 			"error":    err.Error(),
@@ -522,31 +526,30 @@ func (s *OrderService) sendOrderConfirmationNotification(ctx context.Context, or
 
 func (s *OrderService) sendStatusChangeNotification(ctx context.Context, order *models.Order, previousStatus models.OrderStatus) {
 	var notificationType models.NotificationType
-	var title, body string
+	var subject, body string
 
 	switch order.Status {
 	case models.OrderStatusShipped:
 		notificationType = models.NotificationTypeOrderShipped
-		title = "Order Shipped"
+		subject = "Order Shipped"
 		body = fmt.Sprintf("Your order %s has been shipped.", order.ID)
 	case models.OrderStatusDelivered:
 		notificationType = models.NotificationTypeOrderDelivered
-		title = "Order Delivered"
+		subject = "Order Delivered"
 		body = fmt.Sprintf("Your order %s has been delivered.", order.ID)
 	default:
 		return // No notification for other status changes
 	}
 
-	notification := &models.Notification{
-		UserID:    order.UserID,
+	req := &models.SendNotificationRequest{
 		Type:      notificationType,
-		Channel:   models.NotificationChannelEmail,
-		Title:     title,
+		Priority:  models.NotificationPriorityNormal,
+		Recipient: order.UserID,
+		Subject:   subject,
 		Body:      body,
-		CreatedAt: time.Now(),
 	}
 
-	if err := s.notificationClient.SendNotification(ctx, notification); err != nil {
+	if _, err := s.notificationClient.Send(ctx, req); err != nil {
 		s.logger.Error("Failed to send status change notification", logging.Fields{
 			"order_id": order.ID,
 			"error":    err.Error(),
@@ -555,20 +558,19 @@ func (s *OrderService) sendStatusChangeNotification(ctx context.Context, order *
 }
 
 func (s *OrderService) sendCancellationNotification(ctx context.Context, order *models.Order, previousStatus models.OrderStatus) {
-	notification := &models.Notification{
-		UserID:  order.UserID,
-		Type:    models.NotificationTypeOrderCancelled,
-		Channel: models.NotificationChannelEmail,
-		Title:   "Order Cancelled",
-		Body:    fmt.Sprintf("Your order %s has been cancelled.", order.ID),
-		Data: map[string]string{
+	req := &models.SendNotificationRequest{
+		Type:      models.NotificationTypeOrderCancelled,
+		Priority:  models.NotificationPriorityNormal,
+		Recipient: order.UserID,
+		Subject:   "Order Cancelled",
+		Body:      fmt.Sprintf("Your order %s has been cancelled.", order.ID),
+		Metadata: map[string]string{
 			"order_id": order.ID,
 			"reason":   order.Notes,
 		},
-		CreatedAt: time.Now(),
 	}
 
-	if err := s.notificationClient.SendNotification(ctx, notification); err != nil {
+	if _, err := s.notificationClient.Send(ctx, req); err != nil {
 		s.logger.Error("Failed to send cancellation notification", logging.Fields{
 			"order_id": order.ID,
 			"error":    err.Error(),

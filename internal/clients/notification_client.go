@@ -250,6 +250,123 @@ func (c *HTTPNotificationClient) setLegacyHeaders(ctx context.Context, req *http
 	}
 }
 
+// Send implements interfaces.NotificationSender.
+func (c *HTTPNotificationClient) Send(ctx context.Context, req *models.SendNotificationRequest) (*models.NotificationResult, error) {
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("%s/api/v2/notifications", c.baseURL)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(ctx, httpReq)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("notification service returned status %d", resp.StatusCode)
+	}
+
+	var result models.NotificationResult
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// SendBatch implements interfaces.NotificationSender.
+func (c *HTTPNotificationClient) SendBatch(ctx context.Context, req *models.SendBatchRequest) ([]*models.NotificationResult, error) {
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("%s/api/v2/notifications/batch", c.baseURL)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(ctx, httpReq)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("notification service returned status %d", resp.StatusCode)
+	}
+
+	var results []*models.NotificationResult
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// GetStatus implements interfaces.NotificationSender.
+func (c *HTTPNotificationClient) GetStatus(ctx context.Context, notificationID string) (*models.Notification, error) {
+	url := fmt.Sprintf("%s/api/v2/notifications/%s", c.baseURL, notificationID)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(ctx, httpReq)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("notification service returned status %d", resp.StatusCode)
+	}
+
+	var notification models.Notification
+	if err := json.NewDecoder(resp.Body).Decode(&notification); err != nil {
+		return nil, err
+	}
+
+	return &notification, nil
+}
+
+// Cancel implements interfaces.NotificationSender.
+func (c *HTTPNotificationClient) Cancel(ctx context.Context, notificationID string) error {
+	url := fmt.Sprintf("%s/api/v2/notifications/%s/cancel", c.baseURL, notificationID)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return err
+	}
+
+	c.setHeaders(ctx, httpReq)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("notification service returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 // MockNotificationClient is a mock implementation for testing.
 type MockNotificationClient struct {
 	notifications []*models.Notification
