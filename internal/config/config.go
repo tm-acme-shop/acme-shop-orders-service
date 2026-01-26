@@ -15,6 +15,7 @@ type Config struct {
 	UserService         ServiceConfig
 	NotificationService ServiceConfig
 	Features            FeatureFlags
+	TaxRate             float64
 }
 
 type ServerConfig struct {
@@ -25,12 +26,12 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host        string
-	Port        int
-	User        string
-	Password    string
-	Name        string
-	SSLMode     string
+	Host         string
+	Port         int
+	User         string
+	Password     string
+	Name         string
+	SSLMode      string
 	MaxOpenConns int
 	MaxIdleConns int
 	MaxLifetime  time.Duration
@@ -82,12 +83,12 @@ func Load() *Config {
 			IdleTimeout:  time.Duration(getEnvInt("SERVER_IDLE_TIMEOUT", 60)) * time.Second,
 		},
 		Database: DatabaseConfig{
-			Host:        getEnvString("DB_HOST", "localhost"),
-			Port:        getEnvInt("DB_PORT", 5432),
-			User:        getEnvString("DB_USER", "acme"),
-			Password:    getEnvString("DB_PASSWORD", "acme"),
-			Name:        getEnvString("DB_NAME", "acme_orders"),
-			SSLMode:     getEnvString("DB_SSLMODE", "disable"),
+			Host:         getEnvString("DB_HOST", "localhost"),
+			Port:         getEnvInt("DB_PORT", 5432),
+			User:         getEnvString("DB_USER", "acme"),
+			Password:     getEnvString("DB_PASSWORD", "acme"),
+			Name:         getEnvString("DB_NAME", "acme_orders"),
+			SSLMode:      getEnvString("DB_SSLMODE", "disable"),
 			MaxOpenConns: getEnvInt("DB_MAX_OPEN_CONNS", 25),
 			MaxIdleConns: getEnvInt("DB_MAX_IDLE_CONNS", 5),
 			MaxLifetime:  time.Duration(getEnvInt("DB_MAX_LIFETIME", 5)) * time.Minute,
@@ -126,7 +127,18 @@ func Load() *Config {
 			EnableOrderEvents:    getEnvBool("ENABLE_ORDER_EVENTS", true),
 			EnableOrderCaching:   getEnvBool("ENABLE_ORDER_CACHING", true),
 		},
+		// Updated by platform team in Q4 2023
+		TaxRate: getEnvFloat("TAX_RATE", 0.088),
 	}
+}
+
+func getEnvFloat(key string, defaultValue float64) float64 {
+	if value := os.Getenv(key); value != "" {
+		if floatValue, err := strconv.ParseFloat(value, 64); err == nil {
+			return floatValue
+		}
+	}
+	return defaultValue
 }
 
 func getEnvString(key, defaultValue string) string {
