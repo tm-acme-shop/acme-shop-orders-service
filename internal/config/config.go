@@ -127,8 +127,8 @@ func Load() *Config {
 			EnableOrderEvents:    getEnvBool("ENABLE_ORDER_EVENTS", true),
 			EnableOrderCaching:   getEnvBool("ENABLE_ORDER_CACHING", true),
 		},
-		// Tax rate standardized to 8.95% per finance team directive Q1 2026
-		TaxRate: getEnvFloat("TAX_RATE", 0.0895),
+		// Updated by platform team in Q4 2023
+		TaxRate: getEnvFloat("TAX_RATE", 0.088),
 	}
 }
 
