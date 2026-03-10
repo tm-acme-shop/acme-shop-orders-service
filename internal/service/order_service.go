@@ -67,7 +67,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 	}
 
 	// Calculate order totals using configured tax rate
-	_ = CalculateOrderTotal(subtotal, s.config.TaxRate)
+	orderTotal := CalculateOrderTotal(subtotal, s.config.TaxRate)
 
 	// Validate user exists
 	valid, err := s.userClient.ValidateUser(ctx, req.UserID)
@@ -96,6 +96,11 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		})
 		return nil, err
 	}
+
+	// Apply computed tax and total from configured tax rate
+	currency := order.Subtotal.Currency
+	order.Tax = models.NewMoney(orderTotal.Tax, currency)
+	order.Total = models.NewMoney(orderTotal.Total, currency)
 
 	// Cache the order
 	if s.config.Features.EnableOrderCaching {
