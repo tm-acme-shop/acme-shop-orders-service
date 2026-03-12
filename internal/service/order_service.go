@@ -515,6 +515,13 @@ func (s *OrderService) sendOrderConfirmationNotification(ctx context.Context, or
 		Recipient: order.UserID,
 		Subject:   "Order Confirmation",
 		Body:      fmt.Sprintf("Your order %s has been received.", order.ID),
+		TemplateData: map[string]interface{}{
+			"subtotal":      order.Subtotal.ToFloat(),
+			"tax":           order.Tax.ToFloat(),
+			"shipping_cost": order.ShippingCost.ToFloat(),
+			"total":         order.Total.ToFloat(),
+			"currency":      order.Total.Currency,
+		},
 		Metadata: map[string]string{
 			"order_id": order.ID,
 			"total":    fmt.Sprintf("%.2f %s", order.Total.ToFloat(), order.Total.Currency),
