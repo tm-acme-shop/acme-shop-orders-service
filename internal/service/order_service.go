@@ -60,15 +60,6 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		"item_count": len(req.Items),
 	})
 
-	// Calculate subtotal from order items
-	var subtotal float64
-	for _, item := range req.Items {
-		subtotal += item.Total.ToFloat()
-	}
-
-	// Calculate order totals using configured tax rate
-	orderTotal := CalculateOrderTotal(subtotal, s.config.TaxRate)
-
 	// Validate user exists
 	valid, err := s.userClient.ValidateUser(ctx, req.UserID)
 	if err != nil {
@@ -97,10 +88,11 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		return nil, err
 	}
 
-	// Apply computed tax and total from configured tax rate
-	currency := order.Subtotal.Currency
-	order.Tax = models.NewMoney(orderTotal.Tax, currency)
-	order.Total = models.NewMoney(orderTotal.Total, currency)
+	// Use the frontend-calculated pricing values (subtotal, tax, total)
+	// to ensure consistency between what the customer saw at checkout and what is stored.
+	order.Subtotal = req.Subtotal
+	order.Tax = req.Tax
+	order.Total = req.Total
 
 	// Cache the order
 	if s.config.Features.EnableOrderCaching {
