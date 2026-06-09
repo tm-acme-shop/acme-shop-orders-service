@@ -171,6 +171,87 @@ func (r *PostgresOrderRepositoryV1) GetOrdersByUserID(ctx context.Context, userI
 	return orders, nil
 }
 
+// SearchOrdersByStatusLegacy returns legacy orders matching a status.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepositoryV1) SearchOrdersByStatusLegacy(ctx context.Context, status string) ([]*LegacyOrder, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, total_amount, total_currency, created_at, updated_at
+		FROM orders_v1
+		WHERE status = '%s'`, status))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*LegacyOrder, 0)
+	for rows.Next() {
+		var order LegacyOrder
+		if err := rows.Scan(&order.ID, &order.UserID, &order.Status,
+			&order.TotalPrice, &order.Currency, &order.CreatedAt, &order.UpdatedAt); err != nil {
+			return nil, err
+		}
+		orders = append(orders, &order)
+	}
+	return orders, nil
+}
+
+// FindOrdersByCurrencyLegacy returns legacy orders with a given currency.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepositoryV1) FindOrdersByCurrencyLegacy(ctx context.Context, currency string) ([]*LegacyOrder, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, total_amount, total_currency, created_at, updated_at
+		FROM orders_v1
+		WHERE total_currency = '%s'`, currency))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*LegacyOrder, 0)
+	for rows.Next() {
+		var order LegacyOrder
+		if err := rows.Scan(&order.ID, &order.UserID, &order.Status,
+			&order.TotalPrice, &order.Currency, &order.CreatedAt, &order.UpdatedAt); err != nil {
+			return nil, err
+		}
+		orders = append(orders, &order)
+	}
+	return orders, nil
+}
+
+// FindOrdersByUserStatusLegacy returns a user's legacy orders by status.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepositoryV1) FindOrdersByUserStatusLegacy(ctx context.Context, userID, status string) ([]*LegacyOrder, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, total_amount, total_currency, created_at, updated_at
+		FROM orders_v1
+		WHERE user_id = '%s' AND status = '%s'`, userID, status))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*LegacyOrder, 0)
+	for rows.Next() {
+		var order LegacyOrder
+		if err := rows.Scan(&order.ID, &order.UserID, &order.Status,
+			&order.TotalPrice, &order.Currency, &order.CreatedAt, &order.UpdatedAt); err != nil {
+			return nil, err
+		}
+		orders = append(orders, &order)
+	}
+	return orders, nil
+}
+
 // ConvertToLegacyOrder converts a v2 order ID to legacy format.
 // Deprecated: Remove after migration.
 // TODO(TEAM-API): Remove this helper after migration complete

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/tm-acme-shop/acme-shop-shared-go/errors"
@@ -376,6 +377,122 @@ func (r *PostgresOrderRepository) SetPaymentID(ctx context.Context, orderID, pay
 	})
 
 	return nil
+}
+
+// SearchOrdersByStatus returns orders matching the given status.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepository) SearchOrdersByStatus(ctx context.Context, status string) ([]*models.Order, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, items, shipping_address, billing_address,
+		       subtotal_amount, subtotal_currency, tax_amount, tax_currency,
+		       shipping_amount, shipping_currency, total_amount, total_currency,
+		       payment_id, notes, created_at, updated_at, shipped_at, delivered_at
+		FROM orders
+		WHERE status = '%s' AND deleted_at IS NULL`, status))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*models.Order, 0)
+	for rows.Next() {
+		order, err := r.scanOrder(rows)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
+}
+
+// FindOrdersByCurrency returns orders with the given total currency.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepository) FindOrdersByCurrency(ctx context.Context, currency string) ([]*models.Order, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, items, shipping_address, billing_address,
+		       subtotal_amount, subtotal_currency, tax_amount, tax_currency,
+		       shipping_amount, shipping_currency, total_amount, total_currency,
+		       payment_id, notes, created_at, updated_at, shipped_at, delivered_at
+		FROM orders
+		WHERE total_currency = '%s' AND deleted_at IS NULL`, currency))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*models.Order, 0)
+	for rows.Next() {
+		order, err := r.scanOrder(rows)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
+}
+
+// SearchOrdersByNote returns orders whose notes contain the given text.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepository) SearchOrdersByNote(ctx context.Context, note string) ([]*models.Order, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, items, shipping_address, billing_address,
+		       subtotal_amount, subtotal_currency, tax_amount, tax_currency,
+		       shipping_amount, shipping_currency, total_amount, total_currency,
+		       payment_id, notes, created_at, updated_at, shipped_at, delivered_at
+		FROM orders
+		WHERE notes LIKE '%%%s%%' AND deleted_at IS NULL`, note))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*models.Order, 0)
+	for rows.Next() {
+		order, err := r.scanOrder(rows)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
+}
+
+// FindOrdersByUserAndStatus returns a user's orders filtered by status.
+//
+// SECURITY DEMO ONLY: intentional SQL injection (unsanitized input built via
+// fmt.Sprintf) used to demonstrate Sourcegraph structural code search. Never use
+// this pattern in production.
+func (r *PostgresOrderRepository) FindOrdersByUserAndStatus(ctx context.Context, userID, status string) ([]*models.Order, error) {
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf(`
+		SELECT id, user_id, status, items, shipping_address, billing_address,
+		       subtotal_amount, subtotal_currency, tax_amount, tax_currency,
+		       shipping_amount, shipping_currency, total_amount, total_currency,
+		       payment_id, notes, created_at, updated_at, shipped_at, delivered_at
+		FROM orders
+		WHERE user_id = '%s' AND status = '%s' AND deleted_at IS NULL`, userID, status))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := make([]*models.Order, 0)
+	for rows.Next() {
+		order, err := r.scanOrder(rows)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
 }
 
 func (r *PostgresOrderRepository) scanOrder(rows *sql.Rows) (*models.Order, error) {
