@@ -283,7 +283,7 @@ func (h *Handlers) ListOrdersV1(c *gin.Context) {
 		return
 	}
 
-	orders, err := h.orderService.GetUserOrdersV1(c.Request.Context(), userID)
+	orders, err := h.orderService.ListOrdersV1(c.Request.Context(), userID)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -326,28 +326,6 @@ func (h *Handlers) GetUserOrders(c *gin.Context) {
 		"limit":  limit,
 		"offset": offset,
 	})
-}
-
-// GetUserOrdersV1 handles GET /api/v1/users/:user_id/orders
-// Deprecated: Use GetUserOrders (v2) instead.
-// TODO(TEAM-API): Remove after v1 API migration complete
-func (h *Handlers) GetUserOrdersV1(c *gin.Context) {
-	logging.Infof("Legacy: Getting user orders via v1 API")
-
-	userIDStr := c.Param("user_id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
-		return
-	}
-
-	orders, err := h.orderService.GetUserOrdersV1(c.Request.Context(), userID)
-	if err != nil {
-		handleError(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, orders)
 }
 
 // RefundOrder handles POST /api/v2/orders/:id/refund

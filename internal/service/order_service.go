@@ -341,11 +341,10 @@ func (s *OrderService) GetUserOrders(ctx context.Context, userID string, limit, 
 	return orders, total, nil
 }
 
-// GetUserOrdersV1 retrieves orders using the deprecated v1 format.
-// Deprecated: Use GetUserOrders instead.
+// ListOrdersV1 preserves the legacy order listing endpoint.
+// Deprecated: Use ListOrders instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
-func (s *OrderService) GetUserOrdersV1(ctx context.Context, userID int64) ([]*repository.LegacyOrder, error) {
-	// TODO(TEAM-API): Migrate callers to GetUserOrders
+func (s *OrderService) ListOrdersV1(ctx context.Context, userID int64) ([]*repository.LegacyOrder, error) {
 	logging.Infof("Legacy: Getting orders for user v1: %d", userID)
 	return s.legacyRepo.GetOrdersByUserID(ctx, userID)
 }
