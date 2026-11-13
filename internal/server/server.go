@@ -101,12 +101,6 @@ func (s *Server) setupV1Routes(rg *gin.RouterGroup) {
 		orders.POST("/:id/pay", s.handlers.ProcessOrderPaymentV1)
 	}
 
-	// User order routes (legacy)
-	users := rg.Group("/users")
-	{
-		users.GET("/:user_id/orders", s.handlers.GetUserOrdersV1)
-	}
-
 	// Payment routes (legacy)
 	payments := rg.Group("/payments")
 	{
