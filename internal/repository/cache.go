@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	orderKeyPrefix     = "order:"
-	userOrdersPrefix   = "user_orders:"
-	defaultCacheTTL    = 5 * time.Minute
+	orderKeyPrefix   = "order:"
+	userOrdersPrefix = "user_orders:"
+	defaultCacheTTL  = 5 * time.Minute
 )
 
 // RedisOrderCache implements OrderCache using Redis.
@@ -50,7 +50,7 @@ func (c *RedisOrderCache) Get(ctx context.Context, id string) (*models.Order, er
 	key := orderKeyPrefix + id
 
 	// TODO(TEAM-PLATFORM): Add metrics for cache hits/misses
-	logging.Infof("Cache: Getting order %s", id)
+	logging.Info("Cache: Getting order", logging.Fields{"order_id": id})
 
 	data, err := c.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
@@ -119,7 +119,7 @@ func (c *RedisOrderCache) GetByUserID(ctx context.Context, userID string) ([]*mo
 	key := userOrdersPrefix + userID
 
 	// TODO(TEAM-PLATFORM): Consider using Redis sorted sets for pagination
-	logging.Infof("Cache: Getting orders for user %s", userID)
+	logging.Info("Cache: Getting orders for user", logging.Fields{"user_id": userID})
 
 	data, err := c.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
@@ -165,7 +165,7 @@ type LegacyOrderCache struct {
 // NewLegacyOrderCache creates a deprecated in-memory cache.
 // Deprecated: Use NewRedisOrderCache instead.
 func NewLegacyOrderCache() *LegacyOrderCache {
-	logging.Infof("Warning: Using legacy in-memory cache")
+	logging.Info("Warning: Using legacy in-memory cache")
 	return &LegacyOrderCache{
 		data: make(map[string]*models.Order),
 	}
@@ -175,7 +175,7 @@ func NewLegacyOrderCache() *LegacyOrderCache {
 // Deprecated: Use RedisOrderCache.Get instead.
 func (c *LegacyOrderCache) GetLegacy(id string) *models.Order {
 	// TODO(TEAM-PLATFORM): Migrate to Redis cache
-	logging.Infof("Legacy cache get: %s", id)
+	logging.Info("Legacy cache get", logging.Fields{"order_id": id})
 	return c.data[id]
 }
 
@@ -183,6 +183,6 @@ func (c *LegacyOrderCache) GetLegacy(id string) *models.Order {
 // Deprecated: Use RedisOrderCache.Set instead.
 func (c *LegacyOrderCache) SetLegacy(order *models.Order) {
 	// TODO(TEAM-PLATFORM): Migrate to Redis cache
-	logging.Infof("Legacy cache set: %s", order.ID)
+	logging.Info("Legacy cache set", logging.Fields{"order_id": order.ID})
 	c.data[order.ID] = order
 }

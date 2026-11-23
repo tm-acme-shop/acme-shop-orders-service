@@ -46,7 +46,7 @@ func (h *Handlers) ProcessOrderPayment(c *gin.Context) {
 // Deprecated: Use ProcessOrderPayment (v2) instead.
 // TODO(TEAM-PAYMENTS): Remove after v1 API migration complete
 func (h *Handlers) ProcessOrderPaymentV1(c *gin.Context) {
-	logging.Infof("Legacy: Processing order payment via v1 API")
+	logging.Info("Legacy: Processing order payment via v1 API")
 
 	orderID := c.Param("id")
 
@@ -102,7 +102,7 @@ func (h *Handlers) GetPaymentStatus(c *gin.Context) {
 // Deprecated: Use GetPaymentStatus (v2) instead.
 // TODO(TEAM-PAYMENTS): Remove after v1 API migration complete
 func (h *Handlers) GetPaymentStatusV1(c *gin.Context) {
-	logging.Infof("Legacy: Getting payment status via v1 API")
+	logging.Info("Legacy: Getting payment status via v1 API")
 
 	// Legacy API uses order_id query param instead of payment_id path param
 	orderID := c.Query("order_id")
@@ -187,7 +187,7 @@ func (h *Handlers) ProcessRefund(c *gin.Context) {
 // Deprecated: Use ProcessRefund (v2) instead.
 // TODO(TEAM-PAYMENTS): Remove after v1 API migration complete
 func (h *Handlers) ProcessRefundV1(c *gin.Context) {
-	logging.Infof("Legacy: Processing refund via v1 API")
+	logging.Info("Legacy: Processing refund via v1 API")
 
 	paymentID := c.Param("id")
 
@@ -248,7 +248,7 @@ func (h *Handlers) PaymentWebhook(c *gin.Context) {
 // Deprecated: Use PaymentWebhook (v2) instead.
 // TODO(TEAM-PAYMENTS): Remove after v1 API migration complete
 func (h *Handlers) PaymentWebhookV1(c *gin.Context) {
-	logging.Infof("Legacy: Processing payment webhook via v1 API")
+	logging.Info("Legacy: Processing payment webhook via v1 API")
 
 	// Legacy uses different signature header
 	// TODO(TEAM-API): Remove legacy header after migration

@@ -89,7 +89,7 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) setupV1Routes(rg *gin.RouterGroup) {
 	// TODO(TEAM-API): Remove all v1 routes after migration complete
-	logging.Infof("Setting up deprecated v1 API routes")
+	logging.Info("Setting up deprecated v1 API routes")
 
 	// Order routes (legacy)
 	orders := rg.Group("/orders")

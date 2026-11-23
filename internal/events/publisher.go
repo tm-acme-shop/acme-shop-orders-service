@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -29,14 +28,14 @@ const (
 
 // OrderEvent represents an order-related event.
 type OrderEvent struct {
-	ID             string            `json:"id"`
-	Type           EventType         `json:"type"`
-	OrderID        string            `json:"order_id"`
-	UserID         string            `json:"user_id"`
-	Data           json.RawMessage   `json:"data"`
-	Metadata       map[string]string `json:"metadata"`
-	Timestamp      time.Time         `json:"timestamp"`
-	CorrelationID  string            `json:"correlation_id,omitempty"`
+	ID            string            `json:"id"`
+	Type          EventType         `json:"type"`
+	OrderID       string            `json:"order_id"`
+	UserID        string            `json:"user_id"`
+	Data          json.RawMessage   `json:"data"`
+	Metadata      map[string]string `json:"metadata"`
+	Timestamp     time.Time         `json:"timestamp"`
+	CorrelationID string            `json:"correlation_id,omitempty"`
 }
 
 // KafkaPublisher publishes order events to Kafka.
@@ -203,7 +202,7 @@ type LegacyEventPublisher struct {
 // NewLegacyEventPublisher creates a deprecated event publisher.
 // Deprecated: Use NewKafkaPublisher instead.
 func NewLegacyEventPublisher() *LegacyEventPublisher {
-	log.Printf("Warning: Using legacy event publisher - migrate to Kafka")
+	logging.Warn("Warning: Using legacy event publisher - migrate to Kafka")
 	return &LegacyEventPublisher{
 		logger: logging.NewLoggerV2("legacy-publisher"),
 	}
@@ -213,21 +212,21 @@ func NewLegacyEventPublisher() *LegacyEventPublisher {
 // Deprecated: Use KafkaPublisher.PublishOrderCreated instead.
 func (p *LegacyEventPublisher) PublishOrderCreated(ctx context.Context, order *models.Order) error {
 	// TODO(TEAM-PLATFORM): Migrate to Kafka
-	log.Printf("Legacy: Publishing order created event for order: %s", order.ID)
+	logging.Info("Legacy: Publishing order created event for order", logging.Fields{"order_id": order.ID})
 	return nil
 }
 
 // PublishOrderStatusChanged is a deprecated method.
 // Deprecated: Use KafkaPublisher.PublishOrderStatusChanged instead.
 func (p *LegacyEventPublisher) PublishOrderStatusChanged(ctx context.Context, order *models.Order, previousStatus models.OrderStatus) error {
-	log.Printf("Legacy: Publishing order status changed event for order: %s", order.ID)
+	logging.Info("Legacy: Publishing order status changed event for order", logging.Fields{"order_id": order.ID})
 	return nil
 }
 
 // PublishOrderCancelled is a deprecated method.
 // Deprecated: Use KafkaPublisher.PublishOrderCancelled instead.
 func (p *LegacyEventPublisher) PublishOrderCancelled(ctx context.Context, order *models.Order, reason string) error {
-	log.Printf("Legacy: Publishing order cancelled event for order: %s", order.ID)
+	logging.Info("Legacy: Publishing order cancelled event for order", logging.Fields{"order_id": order.ID})
 	return nil
 }
 

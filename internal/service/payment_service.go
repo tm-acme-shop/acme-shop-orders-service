@@ -60,7 +60,7 @@ func (s *PaymentService) GetPaymentStatus(ctx context.Context, paymentID string)
 // TODO(TEAM-PAYMENTS): Remove after v1 API migration complete
 func (s *PaymentService) GetPaymentStatusV1(ctx context.Context, orderID string) (string, error) {
 	// TODO(TEAM-PAYMENTS): Migrate callers to GetPaymentStatus
-	logging.Infof("Legacy: Getting payment status for order: %s", orderID)
+	logging.Info("Legacy: Getting payment status for order", logging.Fields{"order_id": orderID})
 	return s.legacyPaymentClient.GetStatus(ctx, orderID)
 }
 
@@ -206,7 +206,7 @@ func (s *PaymentService) ProcessWebhook(ctx context.Context, payload []byte, sig
 // TODO(TEAM-PAYMENTS): Remove after migration complete
 func (s *PaymentService) LegacyProcessPayment(ctx context.Context, orderID string, amount float64, currency string) (string, error) {
 	// TODO(TEAM-PAYMENTS): Migrate callers to new payment processing
-	logging.Infof("Legacy: Processing payment for order: %s", orderID)
+	logging.Info("Legacy: Processing payment for order", logging.Fields{"order_id": orderID})
 
 	req := &models.LegacyPaymentRequest{
 		OrderID:  orderID,

@@ -31,7 +31,7 @@ type LegacyHTTPPaymentClient struct {
 // Deprecated: Use NewHTTPPaymentClient instead.
 func NewLegacyHTTPPaymentClient(cfg config.ServiceConfig) *LegacyHTTPPaymentClient {
 	// TODO(TEAM-PAYMENTS): Remove this constructor after migration
-	logging.Infof("Warning: Creating legacy payment client")
+	logging.Info("Warning: Creating legacy payment client")
 	return &LegacyHTTPPaymentClient{
 		baseURL: cfg.BaseURL,
 		httpClient: &http.Client{
@@ -45,7 +45,7 @@ func NewLegacyHTTPPaymentClient(cfg config.ServiceConfig) *LegacyHTTPPaymentClie
 // Deprecated: Use HTTPPaymentClient.ProcessPayment instead.
 func (c *LegacyHTTPPaymentClient) ProcessLegacyPayment(ctx context.Context, req *models.LegacyPaymentRequest) (string, error) {
 	// TODO(TEAM-PAYMENTS): Migrate callers to new payment client
-	logging.Infof("Legacy: Processing payment for order: %s", req.OrderID)
+	logging.Info("Legacy: Processing payment for order", logging.Fields{"order_id": req.OrderID})
 
 	body, err := json.Marshal(req)
 	if err != nil {
@@ -64,7 +64,7 @@ func (c *LegacyHTTPPaymentClient) ProcessLegacyPayment(ctx context.Context, req 
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		logging.Infof("Legacy: Payment request failed: %v", err)
+		logging.Info("Legacy: Payment request failed", logging.Fields{"error": err.Error()})
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -81,7 +81,7 @@ func (c *LegacyHTTPPaymentClient) ProcessLegacyPayment(ctx context.Context, req 
 		return "", err
 	}
 
-	logging.Infof("Legacy: Payment processed, transaction: %s", result.TransactionID)
+	logging.Info("Legacy: Payment processed", logging.Fields{"transaction_id": result.TransactionID})
 	return result.TransactionID, nil
 }
 
@@ -89,7 +89,7 @@ func (c *LegacyHTTPPaymentClient) ProcessLegacyPayment(ctx context.Context, req 
 // Deprecated: Use HTTPPaymentClient.GetPaymentStatus with payment ID.
 func (c *LegacyHTTPPaymentClient) GetStatus(ctx context.Context, orderID string) (string, error) {
 	// TODO(TEAM-PAYMENTS): Migrate callers to new payment client
-	logging.Infof("Legacy: Getting payment status for order: %s", orderID)
+	logging.Info("Legacy: Getting payment status for order", logging.Fields{"order_id": orderID})
 
 	// Use deprecated v1 API endpoint
 	url := fmt.Sprintf("%s/api/v1/payments/status?order_id=%s", c.baseURL, orderID)
@@ -127,7 +127,7 @@ func (c *LegacyHTTPPaymentClient) GetStatus(ctx context.Context, orderID string)
 func (c *LegacyHTTPPaymentClient) setLegacyHeaders(ctx context.Context, req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	
+
 	if c.apiKey != "" {
 		// Legacy uses X-API-Key header
 		// TODO(TEAM-SEC): Migrate to Bearer token
@@ -161,7 +161,7 @@ type LegacyPaymentResult struct {
 // Deprecated: Remove after migration.
 // TODO(TEAM-PAYMENTS): Remove this helper after migration complete
 func ConvertLegacyResultToPayment(result *LegacyPaymentResult, orderID string) *models.Payment {
-	logging.Infof("Converting legacy payment result to new format")
+	logging.Info("Converting legacy payment result to new format")
 	return &models.Payment{
 		ID:         result.TransactionID,
 		OrderID:    orderID,
@@ -178,7 +178,7 @@ type LegacyMockPaymentClient struct{}
 // Deprecated: Use NewMockPaymentClient instead.
 func NewLegacyMockPaymentClient() *LegacyMockPaymentClient {
 	// TODO(TEAM-PAYMENTS): Remove after migration
-	logging.Infof("Warning: Creating legacy mock payment client")
+	logging.Info("Warning: Creating legacy mock payment client")
 	return &LegacyMockPaymentClient{}
 }
 

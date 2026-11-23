@@ -86,7 +86,7 @@ func (c *HTTPUserClient) GetUser(ctx context.Context, userID string) (*models.Us
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (c *HTTPUserClient) GetUserV1(ctx context.Context, userID int64) (*models.UserV1, error) {
 	// TODO(TEAM-API): Migrate callers to GetUser
-	logging.Infof("Legacy: Fetching user v1: %d", userID)
+	logging.Info("Legacy: Fetching user v1", logging.Fields{"user_id": userID})
 
 	url := fmt.Sprintf("%s/api/v1/users/%d", c.baseURL, userID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -135,7 +135,7 @@ func (c *HTTPUserClient) ValidateUser(ctx context.Context, userID string) (bool,
 func (c *HTTPUserClient) setHeaders(ctx context.Context, req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	
+
 	if c.apiKey != "" {
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	}
@@ -152,7 +152,7 @@ func (c *HTTPUserClient) setHeaders(ctx context.Context, req *http.Request) {
 func (c *HTTPUserClient) setLegacyHeaders(ctx context.Context, req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	
+
 	if c.apiKey != "" {
 		// TODO(TEAM-SEC): Migrate to Bearer token
 		req.Header.Set("X-API-Key", c.apiKey)

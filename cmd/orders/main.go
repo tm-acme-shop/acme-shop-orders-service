@@ -27,7 +27,7 @@ func main() {
 	logger := logging.NewLoggerV2("orders-service")
 
 	// TODO(TEAM-PLATFORM): Migrate all legacy logging to structured logging
-	logging.Infof("Starting orders-service on port %d", cfg.Server.Port)
+	logging.Info("Starting orders-service", logging.Fields{"port": cfg.Server.Port})
 
 	db, err := initDatabase(cfg)
 	if err != nil {
@@ -76,9 +76,9 @@ func main() {
 
 	go func() {
 		logger.Info("Server starting", logging.Fields{
-			"port":                  cfg.Server.Port,
+			"port":                   cfg.Server.Port,
 			"enable_legacy_payments": cfg.Features.EnableLegacyPayments,
-			"enable_v1_api":         cfg.Features.EnableV1API,
+			"enable_v1_api":          cfg.Features.EnableV1API,
 		})
 		if err := srv.Start(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("Server failed to start", logging.Fields{"error": err.Error()})
