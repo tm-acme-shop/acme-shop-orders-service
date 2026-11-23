@@ -1,1 +1,10 @@
+# Default owner for everything not matched below.
 * @elly-zietz
+
+# Platform team: CI/CD, container and infrastructure config.
+/.github/ @tm-acme-shop/platform-team
+Dockerfile @tm-acme-shop/platform-team
+
+# Security team: authentication and password handling.
+*auth* @tm-acme-shop/security-team
+*password* @tm-acme-shop/security-team
