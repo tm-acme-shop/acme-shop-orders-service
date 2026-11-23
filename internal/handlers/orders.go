@@ -44,7 +44,7 @@ func (h *Handlers) CreateOrder(c *gin.Context) {
 // Deprecated: Use CreateOrder (v2) instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (h *Handlers) CreateOrderV1(c *gin.Context) {
-	logging.Infof("Legacy: Creating order via v1 API")
+	logging.Info("Legacy: Creating order via v1 API")
 
 	var req repository.LegacyCreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -103,7 +103,7 @@ func (h *Handlers) GetOrder(c *gin.Context) {
 // Deprecated: Use GetOrder (v2) instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (h *Handlers) GetOrderV1(c *gin.Context) {
-	logging.Infof("Legacy: Getting order via v1 API")
+	logging.Info("Legacy: Getting order via v1 API")
 
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseInt(orderIDStr, 10, 64)
@@ -149,7 +149,7 @@ func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
 // Deprecated: Use UpdateOrderStatus (v2) instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (h *Handlers) UpdateOrderStatusV1(c *gin.Context) {
-	logging.Infof("Legacy: Updating order status via v1 API")
+	logging.Info("Legacy: Updating order status via v1 API")
 
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseInt(orderIDStr, 10, 64)
@@ -263,7 +263,7 @@ func (h *Handlers) ListOrders(c *gin.Context) {
 // Deprecated: Use ListOrders (v2) instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (h *Handlers) ListOrdersV1(c *gin.Context) {
-	logging.Infof("Legacy: Listing orders via v1 API")
+	logging.Info("Legacy: Listing orders via v1 API")
 
 	userIDStr := c.Query("user_id")
 	if userIDStr == "" {
@@ -332,7 +332,7 @@ func (h *Handlers) GetUserOrders(c *gin.Context) {
 // Deprecated: Use GetUserOrders (v2) instead.
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (h *Handlers) GetUserOrdersV1(c *gin.Context) {
-	logging.Infof("Legacy: Getting user orders via v1 API")
+	logging.Info("Legacy: Getting user orders via v1 API")
 
 	userIDStr := c.Param("user_id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)

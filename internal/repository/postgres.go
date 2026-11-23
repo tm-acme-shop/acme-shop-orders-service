@@ -309,7 +309,7 @@ func (r *PostgresOrderRepository) List(ctx context.Context, filter *models.Order
 // GetByUserID retrieves all orders for a specific user.
 func (r *PostgresOrderRepository) GetByUserID(ctx context.Context, userID string, limit, offset int) ([]*models.Order, int, error) {
 	// TODO(TEAM-PLATFORM): Optimize with prepared statements
-	logging.Infof("Fetching orders for user: %s", userID)
+	logging.Info("Fetching orders for user", logging.Fields{"user_id": userID})
 
 	filter := &models.OrderListFilter{
 		UserID: userID,

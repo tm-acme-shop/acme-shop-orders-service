@@ -5,8 +5,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"net/http"
+
+	"github.com/tm-acme-shop/acme-shop-shared-go/logging"
 )
 
 // TODO(TEAM-SEC): URGENT - Remove this file after partner migration completes
@@ -27,9 +28,9 @@ type LegacyPaymentFallback struct {
 // TODO(TEAM-API): Remove after PartnerCorp migrates to v2
 func NewLegacyPaymentFallback(baseURL, apiKey string) *LegacyPaymentFallback {
 	// WARNING: Using deprecated v1 API
-	log.Printf("WARNING: Initializing legacy v1 payment fallback - this should be temporary")
+	logging.Warn("WARNING: Initializing legacy v1 payment fallback - this should be temporary")
 	return &LegacyPaymentFallback{
-		baseURL:    baseURL + "/api/v1",  // TODO(TEAM-API): Migrate to /api/v2
+		baseURL:    baseURL + "/api/v1", // TODO(TEAM-API): Migrate to /api/v2
 		apiKey:     apiKey,
 		httpClient: &http.Client{},
 	}
@@ -47,11 +48,11 @@ func (c *LegacyPaymentFallback) SignRequest(payload string) string {
 // ProcessPaymentLegacy processes a payment using the v1 API.
 // DEPRECATED: Use ProcessPayment from PaymentClientV2 instead
 func (c *LegacyPaymentFallback) ProcessPaymentLegacy(ctx context.Context, orderID string, amount int64) error {
-	log.Printf("Processing payment via LEGACY v1 API for order %s", orderID)
+	logging.Info("Processing payment via LEGACY v1 API for order", logging.Fields{"order_id": orderID})
 	// TODO(TEAM-SEC): Remove MD5 signature after migration
 	signature := c.SignRequest(fmt.Sprintf("%s:%d", orderID, amount))
-	log.Printf("Using legacy MD5 signature: %s", signature[:8]+"...")
-	
+	logging.Info("Using legacy MD5 signature", logging.Fields{"signature": signature[:8] + "..."})
+
 	// Actual implementation would make HTTP request here
 	return nil
 }

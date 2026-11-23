@@ -163,7 +163,7 @@ func (s *OrderService) GetOrder(ctx context.Context, id string) (*models.Order, 
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (s *OrderService) GetOrderV1(ctx context.Context, id int64) (*repository.LegacyOrder, error) {
 	// TODO(TEAM-API): Migrate callers to GetOrder
-	logging.Infof("Legacy: Getting order v1: %d", id)
+	logging.Info("Legacy: Getting order v1", logging.Fields{"order_id": id})
 	return s.legacyRepo.GetOrderByID(ctx, id)
 }
 
@@ -346,7 +346,7 @@ func (s *OrderService) GetUserOrders(ctx context.Context, userID string, limit, 
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (s *OrderService) GetUserOrdersV1(ctx context.Context, userID int64) ([]*repository.LegacyOrder, error) {
 	// TODO(TEAM-API): Migrate callers to GetUserOrders
-	logging.Infof("Legacy: Getting orders for user v1: %d", userID)
+	logging.Info("Legacy: Getting orders for user v1", logging.Fields{"user_id": userID})
 	return s.legacyRepo.GetOrdersByUserID(ctx, userID)
 }
 
@@ -377,7 +377,7 @@ func (s *OrderService) ProcessOrderPayment(ctx context.Context, orderID string, 
 
 	// Process payment
 	var paymentResp *models.ProcessPaymentResponse
-	
+
 	// TODO(TEAM-PAYMENTS): Remove legacy payment path after migration
 	if s.config.Features.EnableLegacyPayments && paymentReq.Method == models.PaymentMethodBankTransfer {
 		// Use legacy payment client for bank transfers (temporary)

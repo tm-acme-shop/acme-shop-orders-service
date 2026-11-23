@@ -174,7 +174,7 @@ func ValidatePaymentRequest(req *models.ProcessPaymentRequest) error {
 // Deprecated: Use ValidatePaymentRequest instead.
 // TODO(TEAM-PAYMENTS): Remove after migration complete
 func ValidateLegacyPaymentRequest(req *models.LegacyPaymentRequest) error {
-	logging.Infof("Validating legacy payment request for order: %s", req.OrderID)
+	logging.Info("Validating legacy payment request for order", logging.Fields{"order_id": req.OrderID})
 
 	if req.OrderID == "" {
 		return errors.NewValidationError("order_id", "order ID is required")

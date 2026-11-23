@@ -21,7 +21,7 @@ type PostgresOrderRepositoryV1 struct {
 // Deprecated: Use NewPostgresOrderRepository instead.
 func NewPostgresOrderRepositoryV1(db *sql.DB) *PostgresOrderRepositoryV1 {
 	// TODO(TEAM-API): Remove this constructor after migration
-	logging.Infof("Creating legacy order repository v1")
+	logging.Info("Creating legacy order repository v1")
 	return &PostgresOrderRepositoryV1{db: db}
 }
 
@@ -29,7 +29,7 @@ func NewPostgresOrderRepositoryV1(db *sql.DB) *PostgresOrderRepositoryV1 {
 // Deprecated: Use PostgresOrderRepository.GetByID instead.
 func (r *PostgresOrderRepositoryV1) GetOrderByID(ctx context.Context, id int64) (*LegacyOrder, error) {
 	// TODO(TEAM-API): Migrate callers to new repository
-	logging.Infof("Legacy: Fetching order by ID: %d", id)
+	logging.Info("Legacy: Fetching order by ID", logging.Fields{"order_id": id})
 
 	query := `
 		SELECT id, user_id, status, total_amount, total_currency, created_at, updated_at
@@ -52,7 +52,7 @@ func (r *PostgresOrderRepositoryV1) GetOrderByID(ctx context.Context, id int64) 
 		return nil, fmt.Errorf("order not found: %d", id)
 	}
 	if err != nil {
-		logging.Infof("Legacy: Failed to fetch order: %v", err)
+		logging.Info("Legacy: Failed to fetch order", logging.Fields{"error": err.Error()})
 		return nil, err
 	}
 
@@ -63,7 +63,7 @@ func (r *PostgresOrderRepositoryV1) GetOrderByID(ctx context.Context, id int64) 
 // Deprecated: Use PostgresOrderRepository.Create instead.
 func (r *PostgresOrderRepositoryV1) CreateOrder(ctx context.Context, req *LegacyCreateOrderRequest) (*LegacyOrder, error) {
 	// TODO(TEAM-API): Migrate callers to new repository
-	logging.Infof("Legacy: Creating order for user: %d", req.UserID)
+	logging.Info("Legacy: Creating order", logging.Fields{"user_id": req.UserID})
 
 	itemsJSON, err := json.Marshal(req.Items)
 	if err != nil {
@@ -90,7 +90,7 @@ func (r *PostgresOrderRepositoryV1) CreateOrder(ctx context.Context, req *Legacy
 	).Scan(&id)
 
 	if err != nil {
-		logging.Infof("Legacy: Failed to create order: %v", err)
+		logging.Info("Legacy: Failed to create order", logging.Fields{"error": err.Error()})
 		return nil, err
 	}
 
@@ -109,7 +109,7 @@ func (r *PostgresOrderRepositoryV1) CreateOrder(ctx context.Context, req *Legacy
 // Deprecated: Use PostgresOrderRepository.UpdateStatus instead.
 func (r *PostgresOrderRepositoryV1) UpdateOrderStatus(ctx context.Context, id int64, status string) error {
 	// TODO(TEAM-API): Migrate callers to new repository
-	logging.Infof("Legacy: Updating order %d status to: %s", id, status)
+	logging.Info("Legacy: Updating order status", logging.Fields{"order_id": id, "new_status": status})
 
 	query := `
 		UPDATE orders_v1
@@ -134,7 +134,7 @@ func (r *PostgresOrderRepositoryV1) UpdateOrderStatus(ctx context.Context, id in
 // Deprecated: Use PostgresOrderRepository.GetByUserID instead.
 func (r *PostgresOrderRepositoryV1) GetOrdersByUserID(ctx context.Context, userID int64) ([]*LegacyOrder, error) {
 	// TODO(TEAM-API): Migrate callers to new repository
-	logging.Infof("Legacy: Fetching orders for user: %d", userID)
+	logging.Info("Legacy: Fetching orders for user", logging.Fields{"user_id": userID})
 
 	query := `
 		SELECT id, user_id, status, total_amount, total_currency, created_at, updated_at
@@ -256,7 +256,7 @@ func (r *PostgresOrderRepositoryV1) FindOrdersByUserStatusLegacy(ctx context.Con
 // Deprecated: Remove after migration.
 // TODO(TEAM-API): Remove this helper after migration complete
 func ConvertToLegacyOrder(orderID string, userID string, status string, total float64, currency string) *LegacyOrder {
-	logging.Infof("Converting order %s to legacy format", orderID)
+	logging.Info("Converting order to legacy format", logging.Fields{"order_id": orderID})
 	now := time.Now().Format(time.RFC3339)
 	return &LegacyOrder{
 		ID:         0, // Legacy uses int64, new uses string UUIDs

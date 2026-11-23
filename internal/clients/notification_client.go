@@ -119,7 +119,7 @@ func (c *HTTPNotificationClient) SendEmail(ctx context.Context, req *models.Send
 // TODO(TEAM-API): Remove after v1 API migration complete
 func (c *HTTPNotificationClient) SendEmailLegacy(ctx context.Context, to, subject, body string) error {
 	// TODO(TEAM-API): Migrate callers to SendEmail
-	logging.Infof("Legacy: Sending email to: %s", to)
+	logging.Info("Legacy: Sending email", logging.Fields{"to": to})
 
 	payload := map[string]string{
 		"to":      to,
@@ -143,7 +143,7 @@ func (c *HTTPNotificationClient) SendEmailLegacy(ctx context.Context, to, subjec
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		logging.Infof("Legacy: Failed to send email: %v", err)
+		logging.Info("Legacy: Failed to send email", logging.Fields{"error": err.Error()})
 		return err
 	}
 	defer resp.Body.Close()
@@ -226,7 +226,7 @@ func (c *HTTPNotificationClient) SendPush(ctx context.Context, req *models.SendP
 func (c *HTTPNotificationClient) setHeaders(ctx context.Context, req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	
+
 	if c.apiKey != "" {
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	}
@@ -239,7 +239,7 @@ func (c *HTTPNotificationClient) setHeaders(ctx context.Context, req *http.Reque
 func (c *HTTPNotificationClient) setLegacyHeaders(ctx context.Context, req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	
+
 	if c.apiKey != "" {
 		// TODO(TEAM-SEC): Migrate to Bearer token
 		req.Header.Set("X-API-Key", c.apiKey)
